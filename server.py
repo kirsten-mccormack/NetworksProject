@@ -26,10 +26,11 @@ serv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 serv.bind((HOST, PORT))
 serv.listen(5)
 
-print ("Waiting for connection from client...\n")
-client, addr = serv.accept()
-client.send("220 Server ready for new user")
-login()
+while True: 
+    print ("Waiting for connection from client...\n")
+    client, addr = serv.accept()
+    client.send("220 Server ready for new user")
+    login()
 # print ("\nConnected to by address: {}".format(addr))
 
 # while true:
