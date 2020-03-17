@@ -8,19 +8,29 @@ import os
 import struct
 
 def login():
-    received = client.recv(4096)
-    if ( received[0:4] == 'USER' ):
-        print(received)
-        username = received[6:-1]
-        if ( username == "Alice" ):
-            client.send(bytes("331 Username OK"))
-    return
+    while True:
+        received = client.recv(4096)
+        received = received.decode("utf-8")
+        print("Received data: " + received)
+        if ( received[0:4] == 'USER' ):
+            print(received[0:4])
+            username = received[5:]
+            print(username)
+            if ( username == "Alice" ):
+                client.send(bytes("331 Username OK","utf-8"))
+                break
+            else: 
+                client.send(bytes("530 Not Logged In. Username Incorrect","utf-8"))
+
+        else: 
+            client.send(bytes("332 Account required for login","utf-8"))
+
 
 print ("FTP Server...\n")
 
 # Initialise the socket 
 HOST = socket.gethostname() # This local server
-PORT = 1456 # A random choice
+PORT = 1234 # A random choice
 BUFFER_SIZE = 1024 # Standard size
 serv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 serv.bind((HOST, PORT))
@@ -29,7 +39,7 @@ serv.listen(5)
 while True: 
     print ("Waiting for connection from client...\n")
     client, addr = serv.accept()
-    client.send("220 Server ready for new user")
+    client.send(bytes("220 Server ready for new user","utf-8"))
     login()
 # print ("\nConnected to by address: {}".format(addr))
 

@@ -2,19 +2,24 @@ import socket
 # py -3.7 FileTransferClient.py
 
 def login():
-    print("Username: ")
-    Username = input();
-    Username = 'USER ' + Username
-    client.send(bytes(Username,"utf-8"))
+    while True:
+      print("Username: ")
+      Username = input();
+      Username = 'USER ' + Username
+      client.send(bytes(Username,"utf-8"))
 
-    Data = client.recv(4096)
-    Data = Data.decode("utf-8")
-    Code = Data[0:3]
+      Data = client.recv(4096)
+      Data = Data.decode("utf-8")
+      Code = Data[0:3]
 
-    if Code == '331':
-        print("Correct Username")
-    else:
-      print("Username code not received")
+      if Code == '331':
+          print("Correct Username")
+          break
+      elif Code == '530':
+        print("Incorrect Username")
+      elif Code == '332':
+        print("Login Again")
+      
 
     # print("Password: ")
     # Password = 'PASS ' + Password
