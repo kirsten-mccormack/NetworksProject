@@ -1,6 +1,11 @@
 import socket
 # py -3.7 FileTransferClient.py
 
+def Codes(Code):
+  if Code == '332':
+    login()
+
+
 def login():
   while True:
     print("Username: ")
@@ -17,8 +22,9 @@ def login():
         break
     elif Code == '530':
       print("Incorrect Username")
-    elif Code == '332':
-      print("Login Again")
+    else:
+      Codes(Code)
+      break
     
   while True:
     print("Password: ")
@@ -35,8 +41,9 @@ def login():
       break
     elif Code == '530':
       print("Incorrect Password")
-    elif Code == '332':
-      print("Login Again")
+    else:
+      Codes(Code)
+      break
   
 
   # print("Password: ")
