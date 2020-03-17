@@ -23,7 +23,26 @@ def login():
                 client.send(bytes("530 Not Logged In. Username Incorrect","utf-8"))
 
         else: 
-            client.send(bytes("332 Account required for login","utf-8"))
+           client.send(bytes("332 Account required for login","utf-8"))
+
+    while True:
+        received = client.recv(4096)
+        received = received.decode("utf-8")
+        print("Received data: " + received)
+        if ( received[0:4] == 'PASS' ):
+            print(received[0:4])
+            password = received[5:]
+            print(password)
+            if ( password == "Kirsten" ):
+                client.send(bytes("230 Password OK","utf-8"))
+                break
+            else: 
+                client.send(bytes("530 Not Logged In. Password Incorrect","utf-8"))
+
+        else: 
+           client.send(bytes("331 Username OK. Password required.","utf-8"))
+        
+
 
 
 print ("FTP Server...\n")
