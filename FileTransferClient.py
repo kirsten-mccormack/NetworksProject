@@ -8,6 +8,7 @@ def login():
     client.send(bytes(Username,"utf-8"))
 
     Data = client.recv(4096)
+    Data = Data.decode("utf-8")
     Code = Data[0:3]
 
     if Code == '331':
@@ -29,6 +30,7 @@ if result == 0:
     print ("Port is open")
 
     Data = client.recv(4096)
+    Data = Data.decode("utf-8")
     Code = Data[0:3]
     if Code == '220':
         print("Received Code")
