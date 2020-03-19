@@ -12,35 +12,35 @@ def login():
         received = client.recv(4096)
         received = received.decode("utf-8")
         print("Received data: " + received)
-        if ( received[0:4] == 'USER' ):
+        if ( received[0:4].upper() == 'USER' ):
             print(received[0:4])
             username = received[5:]
             print(username)
             if ( username == "Alice" ):
-                client.send(bytes("331 Username OK","utf-8"))
+                client.send(bytes("331 Username OK \r\n","utf-8"))
                 break
             else: 
-                client.send(bytes("530 Not Logged In. Username Incorrect","utf-8"))
+                client.send(bytes("530 Not Logged In. Username Incorrect \r\n","utf-8"))
 
         else: 
-           client.send(bytes("332 Account required for login","utf-8"))
+           client.send(bytes("332 Account required for login \r\n","utf-8"))
 
     while True:
         received = client.recv(4096)
         received = received.decode("utf-8")
         print("Received data: " + received)
-        if ( received[0:4] == 'PASS' ):
+        if ( received[0:4].upper() == 'PASS' ):
             print(received[0:4])
             password = received[5:]
             print(password)
             if ( password == "Kirsten" ):
-                client.send(bytes("230 Password OK","utf-8"))
+                client.send(bytes("230 Password OK \r\n","utf-8"))
                 break
             else: 
-                client.send(bytes("530 Not Logged In. Password Incorrect","utf-8"))
+                client.send(bytes("530 Not Logged In. Password Incorrect \r\n","utf-8"))
 
         else: 
-           client.send(bytes("331 Username OK. Password required.","utf-8"))
+           client.send(bytes("331 Username OK. Password required. \r\n","utf-8"))
         
 
 
@@ -58,8 +58,13 @@ serv.listen(5)
 while True: 
     print ("Waiting for connection from client...\n")
     client, addr = serv.accept()
-    client.send(bytes("220 Server ready for new user","utf-8"))
-    login()
+    client.send(bytes("220 Server ready for new user\r\n","utf-8"))
+    data = client.recv(4096)
+    print(data)
+    client.send(bytes("234 Dont know\r\n","utf-8"))
+    data = client.recv(4096)
+    print(data)
+    # login()
 # print ("\nConnected to by address: {}".format(addr))
 
 # while true:
