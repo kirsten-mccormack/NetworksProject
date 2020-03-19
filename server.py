@@ -48,7 +48,7 @@ def login():
 print ("FTP Server...\n")
 
 # Initialise the socket 
-HOST = socket.gethostname() # This local server
+HOST = "192.168.1.109" # This local server
 PORT = 1234 # A random choice
 BUFFER_SIZE = 1024 # Standard size
 serv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

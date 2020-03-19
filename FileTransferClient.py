@@ -3,14 +3,16 @@ import socket
 
 def Codes(Code):
   if Code == '332':
+    print("before login")
     login()
+
 
 
 def login():
   while True:
     print("Username: ")
     Username = input();
-    Username = 'USER ' + Username
+    Username = 'USER' + Username
     client.send(bytes(Username,"utf-8"))
 
     Data = client.recv(4096)
@@ -28,7 +30,7 @@ def login():
     
   while True:
     print("Password: ")
-
+    Password = input();
     Password = 'PASS ' + Password
     client.send(bytes(Password,"utf-8"))
 
@@ -54,7 +56,7 @@ def login():
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 # client.connect((socket.gethostname(), 1234))
-result = client.connect_ex((socket.gethostname(), 1234))
+result = client.connect_ex(("192.168.1.109", 1234))
 
 if result == 0:
     print ("Port is open")
