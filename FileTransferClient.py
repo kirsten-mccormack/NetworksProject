@@ -12,7 +12,7 @@ def login():
   while True:
     print("Username: ")
     Username = input();
-    Username = 'USER' + Username
+    Username = 'USER ' + Username + "\r\n" 
     client.send(bytes(Username,"utf-8"))
 
     Data = client.recv(4096)
@@ -31,7 +31,7 @@ def login():
   while True:
     print("Password: ")
     Password = input();
-    Password = 'PASS ' + Password
+    Password = 'PASS ' + Password + "\r\n"
     client.send(bytes(Password,"utf-8"))
 
     Data = client.recv(4096)
@@ -52,11 +52,22 @@ def login():
   # Password = 'PASS ' + Password
   # client.send(bytes(Password,"utf-8"))
 
+def connect_datasocket():
+  datasocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  datasocket.connect((host, data_port)) 
 
 
+host = "192.168.8.106"
+port = 1233
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-# client.connect((socket.gethostname(), 1234))
-result = client.connect_ex(("192.168.1.109", 1234))
+# client.connect((host, port))
+result = client.connect_ex((host, port))
+
+# set up data port? 
+data_port = 1232 #this okay? 
+client.data_port = data_port
+# Connect to dataport: call fxn 
+connect_datasocket()
 
 if result == 0:
     print ("Port is open")
@@ -85,3 +96,5 @@ else:
 #         print("Echo: " + from_server.decode("utf-8") + "\n")
 
 #     client.close()   
+
+

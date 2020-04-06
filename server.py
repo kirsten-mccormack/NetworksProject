@@ -7,23 +7,32 @@ import time
 import os
 import struct
 
+def commands(Command):
+#  Get the Command Name and the rest of the command
+CommandName = "PORT";
+RestOfCommand = "The Rest"
+
+    if CommandName == "PORT":
+        DataConnection(RestOfCommand)
+        
+
 def login():
     while True:
         received = client.recv(4096)
+        print(received)
         received = received.decode("utf-8")
         print("Received data: " + received)
         if ( received[0:4] == 'USER' ):
-            print(received[0:4])
-            username = received[5:]
+            username = received[5:-2]
             print(username)
             if ( username == "Alice" ):
-                client.send(bytes("331 Username OK","utf-8"))
+                client.send(bytes("331 Username OK\r\n","utf-8"))
+                print("Correct Username")
                 break
             else: 
-                client.send(bytes("530 Not Logged In. Username Incorrect","utf-8"))
-
+                client.send(bytes("530 Not Logged In. Username Incorrect\r\n","utf-8"))
         else: 
-           client.send(bytes("332 Account required for login","utf-8"))
+           client.send(bytes("332 Account required for login\r\n","utf-8"))
 
     while True:
         received = client.recv(4096)
@@ -31,45 +40,56 @@ def login():
         print("Received data: " + received)
         if ( received[0:4] == 'PASS' ):
             print(received[0:4])
-            password = received[5:]
+            password = received[5:-2]
             print(password)
             if ( password == "Kirsten" ):
-                client.send(bytes("230 Password OK","utf-8"))
+                client.send(bytes("230 Password OK\r\n","utf-8"))
                 break
             else: 
-                client.send(bytes("530 Not Logged In. Password Incorrect","utf-8"))
+                client.send(bytes("530 Not Logged In. Password Incorrect\r\n","utf-8"))
 
         else: 
-           client.send(bytes("331 Username OK. Password required.","utf-8"))
+           client.send(bytes("331 Username OK. Password required.\r\n","utf-8"))
         
-
+def DataConnection():
 
 
 print ("FTP Server...\n")
 
 # Initialise the socket 
-HOST = "192.168.1.109" # This local server
-PORT = 1234 # A random choice
+HOST = "192.168.8.106" # This local server
+PORT = 1233 # A random choice
 BUFFER_SIZE = 1024 # Standard size
 serv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 serv.bind((HOST, PORT))
 serv.listen(5)
 
 while True: 
-    print ("Waiting for connection from client...\n")
+    print ("Waiting for connection from client...\r\n")
     client, addr = serv.accept()
-    client.send(bytes("220 Server ready for new user","utf-8"))
+    client.send(bytes("220 Server ready for new user\r\n","utf-8"))
     login()
+
+    # // This is the code to interface with the FileZilla Client: 
+    # data = client.recv(4096);
+    # print(data)
+    # client.send(bytes("500 Security something\r\n","utf-8"))
+    # data = client.recv(4096);
+    # print(data)
+    # client.send(bytes("500 Security something\r\n","utf-8"))
+    # login()
+
+
+    # while true:
+    # filename = input(str("Please enter the filename: "))
+    # file = open(filename,"rb")
+    # file_data = file.read(1024)
+
+    # client.send(file_data)
+    # print ("Data succesfully transmitted. /n")
+
+
 # print ("\nConnected to by address: {}".format(addr))
-
-# while true:
-#     filename = input(str("Please enter the filename: "))
-#     file = open(filename,"rb")
-#     file_data = file.read(1024)
-
-#     client.send(file_data)
-#     print ("Data succesfully transmitted. /n")
-
 
 # define min commands: 
 #                    USER, QUIT, PORT,
