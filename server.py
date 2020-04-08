@@ -7,18 +7,48 @@ import time
 import os
 import struct
 
+
+CRLF = "\r\n"
+
+# Default for types
+RepresenationType = "A"; # ASCII
+RepresentationTypeControl = "N" # Non-Print
+FileStructure = "F" # File 
+TransferMode = "S" # Stream 
+
+# Initialise the socket 
+HOST = "192.168.8.106" # This local server
+CONN_PORT = 21 # A random choice for connection port 
+BUFFER_SIZE = 1024 # Standard size
+DATA_PORT = 20
+
+
 def commands(Command):
 #  Get the Command Name and the rest of the command
 CommandName = "PORT";
 RestOfCommand = "The Rest"
 
     if CommandName == "PORT":
-        DataConnection(RestOfCommand)
-        
+        PORT(RestOfCommand)
+    if CommandNamd == "RETR"
+        RETR(RestOfCommand)
+    if CommandName == "STOR"
+        STOR(RestOfCommand)
+    if CommandName == "QUIT"
+        QUIT()
+    if CommandName == "NOOP"
+        NOOP()
+
+def SendCode(Code)
+    client.send(Code)
+
+def ReceiveData(size)
+    return client.recv(size)
+
 
 def login():
     while True:
-        received = client.recv(4096)
+        received = ReceiveData(4096)
         print(received)
         received = received.decode("utf-8")
         print("Received data: " + received)
@@ -26,16 +56,16 @@ def login():
             username = received[5:-2]
             print(username)
             if ( username == "Alice" ):
-                client.send(bytes("331 Username OK\r\n","utf-8"))
+                SendCode(bytes("331 Username OK" + CRLF,"utf-8"))
                 print("Correct Username")
                 break
             else: 
-                client.send(bytes("530 Not Logged In. Username Incorrect\r\n","utf-8"))
+                SendCode(bytes("530 Not Logged In. Username Incorrect" + CRLF,"utf-8"))
         else: 
-           client.send(bytes("332 Account required for login\r\n","utf-8"))
+           SendCode(bytes("332 Account required for login" + CRLF,"utf-8"))
 
     while True:
-        received = client.recv(4096)
+        received = ReceivedData(4096)
         received = received.decode("utf-8")
         print("Received data: " + received)
         if ( received[0:4] == 'PASS' ):
@@ -51,17 +81,45 @@ def login():
         else: 
            client.send(bytes("331 Username OK. Password required.\r\n","utf-8"))
         
-def DataConnection():
+
+def STOR():
+
+
+
+def PORT(RestOfCommand):
+    GetAddrPort = RestOfCommand
+
+    IndexFound = -1;
+    for x in range(4)
+        IndexFound = RestOfCommand.find(",",IndexFound+1)
+    
+    Client_DataAddr = RestOfCommand[0:IndexFound-1]
+    
+    
+
+    ClientAddress = GetAddrPort[0:]
+    ClientPort =   
+    # If port valid change, if not stays the same -> send required commands
+
+    #PORT Initiation
+
+def MAKECONN():
+    #Make data connection
+
+def RETR():
+
+def QUIT():
+    client.close()
+
+
+def NOOP():
+    SendCode(bytes("200 OKAY" + CRLF ,"utf-8"))
 
 
 print ("FTP Server...\n")
 
-# Initialise the socket 
-HOST = "192.168.8.106" # This local server
-PORT = 1233 # A random choice
-BUFFER_SIZE = 1024 # Standard size
 serv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-serv.bind((HOST, PORT))
+serv.bind((HOST, CONN_PORT))
 serv.listen(5)
 
 while True: 
