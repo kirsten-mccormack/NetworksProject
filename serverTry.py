@@ -25,8 +25,6 @@ LoggedIn = False
 
 DefaultClientDataAddress = ""
 DefaultClientDataPort = 0 
-Client_DataAddr = DefaultClientDataAddress
-Client_DataPort = DefaultClientDataPort
 
 def commands(Command):
 #  Get th+e Command Name and the rest of the command
@@ -37,7 +35,7 @@ def commands(Command):
     IndexRest = Command.find(CRLF)
     # If not found then maybe throw an exception 
     RestOfCommand = Command[IndexName+1:IndexRest]
-    print("RestOfCommand " + RestOfCommand)
+    print("RestOfCommand " + CommandName)
 
     if CommandName == "PORT":
         PORT(RestOfCommand)
@@ -112,66 +110,31 @@ def PORT(RestOfCommand):
     P1 = int(Ports[0])
     P2 = int(Ports[1])
     Client_DataPort = P1*256+P2
-    print(Client_DataPort)
     
-    SendCode(bytes("200 Okay" + CRLF,"utf-8"))
+    SendCode(bytes("200 Okay","utf-8"))
 
 def MAKEDATACONN():
     #Make data connection and return if it worked or not 
     # Check if it is a reliable port number 
-    print("IN MAKEDATACONN")
     data = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     data.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     data.bind((HOST,DATA_PORT))
-    print(Client_DataAddr)
-    print(Client_DataPort)
-    result = data.connect_ex((Client_DataAddr, Client_DataPort))
-    print(result)
+    result = client.connect_ex((Client_DataAddr, Client_DataPort))
 
-    if result == 0:
-        result = client.connect_ex((Client_DataAddr, DefaultClientDataPort ))
-        print("CONNECTION NOT MADE 1") 
+    if result == 1:
+        Client_DataPort = DefaultClientDataPort
+        result = client.connect_ex((Client_DataAddr, Client_DataPort))
 
-        if result == 0:
-            print("CONNECTION NOT MADE 2")
-            close()
-            return data, 0
+        if result == 1:
+            return 0
 
-    print("CONNECTION MADE")
-    return data, 1
+    return 1
 
 def STOR(Pathname):
-    print("IN STOR")
-    file = open(Pathname,'w')
-    DataError = MAKEDATACONN()
-    SendCode(bytes("150 File status okay; about to open data connection." + CRLF,"utf-8"))
-    print("AFTER FILE OPEN")
-    # Check if file is open
-    # Check the parameters are in the correct format and that there are parameters
-    if DataError[1] == 0:
-        # Send some error code
-        print("Sad")
-    else:
-        while True: 
-            data = DataError[0]
-            downloaded = data.recv(4096)
-            print(downloaded)
-            if not downloaded: break 
-            file.write(downloaded)
-            print("IN FILE WRITE")
-            # Check and Open a file
-            # Print some Error Code (150)
-            # Receive data until complete
-            # Print some Error Code (226)
-            # Close data connection
+   # 
+    print("Hello")
 
-    file.close()
-    SendCode(bytes("226 Closing data connection. Requested file transfer successful" + CRLF,"utf-8"))
-    data.close()
-    print("END OF STOR")
-
-
-def RETR(pathname):
+def RETR():
     # 
     print("Hello")
 
@@ -183,7 +146,6 @@ def NOOP():
     SendCode(bytes("200 OKAY" + CRLF ,"utf-8"))
 
 def close():
-    client.close()
     try: serv.shutdown(socket.SHUT_RDWR) #socket.SHUT_RDWR
     except (socket.error, OSError, ValueError):
         pass
@@ -209,15 +171,8 @@ while True:
     Client_DataPort = DefaultClientDataPort
     
     login()
-    i = 0
-    while i < 2:
-        print(i)
-        Somedata = ReceiveData(1024).decode("utf-8")
-        print(Somedata)
-        if Somedata:
-            commands(Somedata)
-        i = i+1
-
+    data = ReceiveData(1024).decode("utf-8")
+    commands(data)
     CLOSED = close()
     if CLOSED == True:
         break
