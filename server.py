@@ -17,7 +17,7 @@ FileStructure = "F" # File
 TransferMode = "S" # Stream 
 
 # Initialise the socket 
-HOST = "192.168.8.106" # This local server
+HOST = "192.168.8.100" # This local server
 CONN_PORT = 21 # A random choice for connection port 
 BUFFER_SIZE = 1024 # Standard size
 DATA_PORT = 20

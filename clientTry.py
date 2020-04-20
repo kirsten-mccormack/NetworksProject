@@ -7,7 +7,7 @@ RepresenationType = "A"; # Ascii
 RepresentationTypeControl = "N" # Non-Print
 FileStructure = "F" # File 
 TransferMode = "S" # Stream 
-Host = "192.168.8.106"
+Host = "192.168.8.100"
 ControlPort = 21
 Addr = Host.replace(".", ",")
 DataPort = 1232 # Calculate dataport with {port = p1*256+p2}. 
