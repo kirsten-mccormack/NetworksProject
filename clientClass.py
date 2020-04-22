@@ -86,6 +86,11 @@ class Client:
             print("Correct Username")
             return True 
 
+        if Code == '425':
+            print("Cannot open data connection")
+            return False 
+
+
         if Code == '530':
             print("Incorrect Username or Password")
             return False
@@ -137,7 +142,6 @@ class Client:
         print("OUTOFPORT")
 
     def connect_datasocket(self):
-        # PORT()
         self.datasocket.bind((self.Host, self.DataPort))
         self.datasocket.listen(5)
         print("ACCEPTED DATASOCKET")
@@ -157,11 +161,12 @@ class Client:
             serv, addr = self.datasocket.accept()
             print(addr)
             file = open(filePath,'r')
-            upload = file.read(4096)
+            upload = file.read(1024)
             while upload: 
                 print(upload)
-                serv.send(upload) # HELP! Should this be serv.send? See connect_datasock...fxn
-                upload = file.read(4096)
+                serv.send(upload.encode('utf-8')) # HELP! Should this be serv.send? See connect_datasock...fxn
+                upload = file.read(1024)
+                print(upload)
             break
         file.close()
         code = self.receiveCode()
@@ -169,6 +174,8 @@ class Client:
 
     def RETR(self, path): #This function should send the retr command as well as open up a new file to write the downloaded data into 
         # Connect to dataport: call fxn 
+        check = self.PORT()
+        if check == False: return False 
         self.connect_datasocket()
         toSend = "RETR " + path 
         self.sendCmd(toSend)
@@ -202,7 +209,7 @@ class Client:
 
 client = Client ("192.168.8.100")    
 client.Run()
-client.RETR("ClientFiles/testFile.txt") # "testFile.txt"
+client.STOR("ClientFiles/testFile.txt","testFile44.txt") # "testFile.txt"
 
       
  

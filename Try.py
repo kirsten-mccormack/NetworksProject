@@ -1,6 +1,6 @@
-filePath = "ClientFiles/testFile.txt"
-file = open(filePath,'r')
-upload = file.read(4096)
+filePath = "testFile1.txt"
+file = open(filePath,'w')
+upload = file.write('PLEASE FREAKING WORK')
 print(upload)
 
 

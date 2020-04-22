@@ -25,32 +25,36 @@ class Server:
 
     def __init__(self, ServerIPAddr):
             self.Host = ServerIPAddr
+            self.data = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.data.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     
-    def run():
-            
+    def run(self):
+
+        self.connect()
+
         while True: 
             
-                login()
-                i = 0
-                while i < 2:
-                        print(i)
-                        Somedata = ReceiveData(1024).decode("utf-8")
-                        print(Somedata)
-                        if Somedata:
-                        commands(Somedata)
-                        i = i+1
+            self.login()
+            i = 0
+            while i < 2:
+                print(i)
+                Somedata = self.ReceiveData("CONTROL",1024)
+                print(Somedata)
+                if Somedata:
+                    self.commands(Somedata)
+                i = i+1
 
-                CLOSED = close()
-                if CLOSED == True:
-                        break
+            CLOSED = self.close()
+            if CLOSED == True:
+                break
 
-    def connectsocket():
+    def connectsocket(self):
         self.serv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.serv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) # Apparently this is necessary to make the port reusable again after closing
         self.serv.bind((self.Host, self.CONN_PORT))
         self.serv.listen(5)
     
-    def connect():
+    def connect(self):
         self.connectsocket()
 
         print ("Waiting for connection from client...")
@@ -70,48 +74,52 @@ class Server:
         # print("Index " + IndexName)
         CommandName = Command[0:IndexName]
         print("Command " + CommandName)
-        IndexRest = Command.find(CRLF)
+        IndexRest = Command.find(self.CRLF)
         # If not found then maybe throw an exception 
         RestOfCommand = Command[IndexName+1:IndexRest]
         print("RestOfCommand " + RestOfCommand)
 
         if CommandName == "PORT":
-        self.PORT(RestOfCommand)
+            self.PORT(RestOfCommand)
         if CommandName == "RETR":
-        self.RETR(RestOfCommand)
+            self.RETR(RestOfCommand)
         if CommandName == "STOR":
-        self.STOR(RestOfCommand)
+            self.STOR(RestOfCommand)
         if CommandName == "QUIT":
-        self.QUIT()
+            self.QUIT()
         if CommandName == "NOOP":
-        self.NOOP()
+            self.NOOP()
 
     def SendCode(self, Code):
 
         StringToSend = ""
 
         if Code == "150":
-        StringToSend = "150 File status okay; about to open data connection."
+            StringToSend = "150 File status okay; about to open data connection."
         if Code == "200":
-        StringToSend = "200 Command okay."
+            StringToSend = "200 Command okay."
         if Code == "220":
-        StringToSend = "220 Service ready for new user."
+            StringToSend = "220 Service ready for new user."
         if Code == "226":
-        StringToSend = "226 Closing data connection. Requested file transfer successful."
+            StringToSend = "226 Closing data connection. Requested file transfer successful."
         if Code == "230":
-        StringToSend = "230 User logged, proceed."
+            StringToSend = "230 User logged, proceed."
         if Code == "331":
-        StringToSend = "331 User name okay, need password."
+            StringToSend = "331 User name okay, need password."
         if Code == "332":
-        StringToSend = "332 Need account for login."
+            StringToSend = "332 Need account for login."
         if Code == "530":
-        StringToSend = "530 Not logged in."
+            StringToSend = "530 Not logged in."
 
-        self.client.send(bytes(StringToSend + self.CRLF,"utf-8")
+        self.client.send(bytes(StringToSend + self.CRLF,"utf-8"))
 
-    def ReceiveData(self,ServerConnection,size):
+    def ReceiveData(self,ServerType, size):
         # Check the received has CRLF at the end if not - bad command
-        return ServerConnection.recv(size).decode("utf-8")
+        if ServerType == "CONTROL":
+            received = self.client.recv(size)
+        elif ServerType == "DATA":
+            received = self.data.recv(size)
+        return received.decode("utf-8")
 
     def login(self):
         # If incorrect three times = Server disconnect
@@ -121,9 +129,9 @@ class Server:
         self.PASS()
         self.LoggedIn = True
             
-    def USER():
+    def USER(self):
         while True:
-            received = self.ReceiveData(self.client, 4096)
+            received = self.ReceiveData("CONTROL", 4096)
             print(received)
             print("Received data: " + received)
             if (received[0:4] == 'USER' ):
@@ -138,9 +146,9 @@ class Server:
             else: 
                 self.SendCode("332")
 
-    def PASS():
+    def PASS(self):
         while True:
-            received = self.ReceiveData(self.client, 4096)
+            received = self.ReceiveData("CONTROL",4096)
             print("Received data: " + received)
             if ( received[0:4] == 'PASS' ):
                 print(received[0:4])
@@ -175,34 +183,32 @@ class Server:
         self.Client_DataPort = P1*256+P2
         print(self.Client_DataPort)
         
-        SendCode("200")
+        self.SendCode("200")
 
     def MAKEDATACONN(self):
         #Make data connection and return if it worked or not 
         # Check if it is a reliable port number 
         print("IN MAKEDATACONN")
-        data = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        data.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        data.bind((self.Host,self.DATA_PORT))
+        self.data.bind((self.Host,self.DATA_PORT))
         print(self.Client_DataAddr)
         print(self.Client_DataPort)
 
-        if (self.Client_DataPort != self.DefaultClientDataPort) and (self.Client_DataAddr != self.DefaultClientDataAddress):
-            result = data.connect_ex((self.Client_DataAddr, self.Client_DataPort))
+        if (self.Client_DataPort != self.DefaultClientDataPort) or (self.Client_DataAddr != self.DefaultClientDataAddress):
+            result = self.data.connect_ex((self.Client_DataAddr, self.Client_DataPort))
             print(result)
-        else: result == 0
+        else: result = 1
 
-        if result == 0:
-        result = client.connect_ex((self.DefaultClientDataAddress, self.DefaultClientDataPort))
-        print("CONNECTION NOT MADE 1") 
+        if result != 0:
+            result = self.data.connect_ex((self.DefaultClientDataAddress, self.DefaultClientDataPort))
+            print("CONNECTION NOT MADE 1") 
 
-        if result == 0:
+        if result != 0:
             print("CONNECTION NOT MADE 2")
             self.close()
-            return data, 0
+            return 0
 
         print("CONNECTION MADE")
-        return data, 1
+        return 1
 
     def STOR(self, Pathname):
         print("IN STOR")
@@ -212,27 +218,32 @@ class Server:
         print("AFTER FILE OPEN")
         # Check if file is open
         # Check the parameters are in the correct format and that there are parameters
-        if DataError[1] == 0:
+        if DataError == 0:
             # Send some error code
             print("Sad")
-        else: #NEED SOMETHING HERE 
-
-        while True: 
-                data = DataError[0]
-                downloaded = self.ReceiveData(data, 4096)
-                print(downloaded)
-                if not downloaded: break 
-                file.write(downloaded)
-                print("IN FILE WRITE")
-                # Check and Open a file
-                # Print some Error Code (150)
-                # Receive data until complete
-                # Print some Error Code (226)
-                # Close data connection
-
-        file.close()
-        self.SendCode("226")
-        data.close()
+        else: 
+            print("IN Download1")
+            try:
+                while True: 
+                        print("IN Download2")
+                        downloaded = self.data.recv(1024)
+                        print(downloaded)
+                        file.write(downloaded.decode("utf-8"))
+                        if not downloaded:
+                            break
+                        print("IN FILE WRITE")
+                        # Check and Open a file
+                        # Print some Error Code (150)
+                        # Receive data until complete
+                        # Print some Error Code (226)
+                        # Close data connection
+            except Exception:
+                    print ('ERROR: ')
+                    self.client.send('425 Error writing file.\r\n')
+            finally:
+                file.close()
+                self.SendCode("226")
+                self.data.close()
         print("END OF STOR")
 
 
@@ -242,17 +253,17 @@ class Server:
 
     def QUIT(self):
         self.LoggedIn = False
-        client.close()
+        self.client.close()
             
     def NOOP(self):
         self.SendCode("200")
 
     def close(self):
         self.client.close()
-        try: serv.shutdown(socket.SHUT_RDWR) #socket.SHUT_RDWR
+        try: self.serv.shutdown(socket.SHUT_RDWR) #socket.SHUT_RDWR
         except (socket.error, OSError, ValueError):
                 pass
-        serv.close()
+        self.serv.close()
         print ("closed")
         return True
 
