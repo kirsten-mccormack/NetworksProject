@@ -4,18 +4,18 @@ import time
 import os
 import struct
 
-CRLF = "\r\n"
+
 
 class Client: 
 
     # Define Class Variables: 
-
+    CRLF = "\r\n"
     RepresenationType = "A"; # Ascii 
     RepresentationTypeControl = "N" # Non-Print
     FileStructure = "F" # File 
     TransferMode = "S" # Stream 
 
-    ControlPort = 21
+    ControlPort = 23
     DataPort = 1232 # Calculate dataport with {port = p1*256+p2}. 
     # What is P1 and P2? 
     #  4 * 256 = 1024
@@ -23,6 +23,7 @@ class Client:
     # P1 = 4 and P2 = 208 
     P1 = "4"
     P2 = "208"
+
         
     #Define Class Methods: 
 
@@ -46,26 +47,37 @@ class Client:
             Code = Data[0:3]
             if Code == "": 
                 print("No code received")
-            else: self.Codes(Code)
-                        # client.close()   
+                return False
+            else: 
+                self.Codes(Code)
+                        # client.close() 
+                if (Code == '220'):
+                    return True
+                else:
+                    return False, "Incorrect Code Sent";   
 
         else:
             print ("Port is not open")
+            return False, "Port is closed"
 
 
     def Codes(self, Code):
-  
+        
+        if Code == "125":
+            print("Data connection already open; transfer starting.")
+            return True
+
         if Code == '150':
             print("File status okay")
             return True
 
-        if Code == '200':
+        elif (Code == '200'):
             print("Server Okay")
             return True
 
         if Code == '220':
             print("Server Ready for new user")
-            self.login()
+            # self.login(Username,Password)
             return True
 
         if Code == '226':
@@ -77,46 +89,44 @@ class Client:
             print("Password Correct")
             return True
 
-        if Code == '332':
-            print("before login")
-            self.login()
-            return True
-
+        
         if Code == '331':
             print("Correct Username")
             return True 
+
+        if Code == '332':
+            print("before login")
+            # self.login()
+            return True
 
         if Code == '425':
             print("Cannot open data connection")
             return False 
 
-
         if Code == '530':
             print("Incorrect Username or Password")
             return False
 
+    def calculatePortValues():
+        print("Hello")
 
-    def login(self):
+    def login(self, Username, Password):
 
-        while True:
-            print("Username: ")
-            Username = input()
-            self.USER(Username)
-            Code = self.receiveCode()
-            check = self.Codes(Code)
-            print(check)
-            if check == True: break
+        self.USER(Username)
+        Code = self.receiveCode()
+        check1 = self.Codes(Code)
+        print(check1)    
+            
+        self.PASS(Password)
+        Code = self.receiveCode()
+        check2 = self.Codes(Code)
         
-        while True:
-            print("Password: ")
-            Password = input()
-            self.PASS(Password)
-            Code = self.receiveCode()
-            check = self.Codes(Code)
-            if check == True: break
+        if (check1 and check2 == True):
+            return True
+        else: return False
 
     def sendCmd (self, cmd): # add CRLF here so don't have to do it all the time
-        toSend = cmd + CRLF
+        toSend = cmd + self.CRLF
         self.client.send(bytes(toSend,"utf-8"))
 
     def receiveCode (self): 
@@ -135,7 +145,7 @@ class Client:
 
     def PORT(self):
         print("PORT")
-        string = "PORT " + self.Addr + "," + self.P1 + "," + self.P2 # our dataport is just an 8bit nunber?
+        string = "PORT " + self.Addr + "," + self.P1 + "," + self.P2
         self.sendCmd(string)
         Check = self.Codes(self.receiveCode())
         if Check == True: return True 
@@ -145,6 +155,43 @@ class Client:
         self.datasocket.bind((self.Host, self.DataPort))
         self.datasocket.listen(5)
         print("ACCEPTED DATASOCKET")
+
+    def NLST(self, dirName):
+        # Send command to get the file names
+        check = self.PORT()
+        if check == False: return False 
+        self.connect_datasocket()
+        getFiles = "NLST " + dirName
+        self.sendCmd(getFiles)
+
+        # Going to be receiving some codes here: 
+        # Make sure that correct code is given  
+        code = self.receiveCode()
+        check = self.Codes(code)
+        # Must say that this is not working 
+        if check == False: return 
+
+        #Might need to do some checks here that the connection is open or something? 
+        #Open new file, download file with pathname 'path, write to newfile, close file
+       
+    #    Now get all the file names in an array and return them 
+
+        while True:   
+            serv, addr = self.datasocket.accept()
+            print(addr)
+            Files = serv.recv(1024)
+            while Files:
+                fileNameArray = []
+                while True:
+                    index = Files.find(self.CRLF,1)
+
+
+        code = self.receiveCode()
+        check = self.Codes(code)
+
+        if check == True: return fileNameArray
+        else: return False
+
 
     def STOR(self, filePath, fileName): # server to accept and store data - if file exists it overwrites, new file created if not
         print("In STOR now...)")
@@ -207,9 +254,9 @@ class Client:
 
 
 
-client = Client ("192.168.8.100")    
-client.Run()
-client.STOR("ClientFiles/testFile.txt","testFile44.txt") # "testFile.txt"
+# client = Client ("192.168.8.100")    
+# client.Run()
+# client.STOR("ClientFiles/testFile.txt","testFile44.txt") # "testFile.txt"
 
       
  

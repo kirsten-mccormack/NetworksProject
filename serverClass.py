@@ -8,16 +8,16 @@ class Server:
     CRLF = "\r\n"
 
     # Default for types
-    RepresenationType = "A"; # ASCII
+    RepresentationType = "A"; # ASCII
     RepresentationTypeControl = "N" # Non-Print
     FileStructure = "F" # File 
     TransferMode = "S" # Stream 
 
     # Initialise the socket 
     # HOST = "192.168.8.106" # This local server
-    CONN_PORT = 21 # A random choice for connection port 
+    CONN_PORT = 23 # A random choice for connection port 
     BUFFER_SIZE = 1024 # Standard size
-    DATA_PORT = 20
+    DATA_PORT = 24
     LoggedIn = False
 
     DefaultClientDataAddress = ""
@@ -33,20 +33,18 @@ class Server:
         self.connect()
 
         while True: 
-            
-            self.login()
+            # self.login()
             i = 0
-            while i < 2:
-                print(i)
+            while True:
                 Somedata = self.ReceiveData("CONTROL",1024)
-                print(Somedata)
+                # print(Somedata)
                 if Somedata:
                     self.commands(Somedata)
-                i = i+1
+                # i = i+1
 
-            CLOSED = self.close()
-            if CLOSED == True:
-                break
+            # CLOSED = self.close()
+            # if CLOSED == True:
+            #     break
 
     def connectsocket(self):
         self.serv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -79,21 +77,33 @@ class Server:
         RestOfCommand = Command[IndexName+1:IndexRest]
         print("RestOfCommand " + RestOfCommand)
 
-        if CommandName == "PORT":
-            self.PORT(RestOfCommand)
-        if CommandName == "RETR":
-            self.RETR(RestOfCommand)
-        if CommandName == "STOR":
-            self.STOR(RestOfCommand)
-        if CommandName == "QUIT":
-            self.QUIT()
-        if CommandName == "NOOP":
-            self.NOOP()
+        if CommandName == "USER":
+                self.USER(RestOfCommand)
+        elif CommandName == "PASS":
+                self.PASS(RestOfCommand)
+        elif (loggedin):
+            if CommandName == "PORT":
+                self.PORT(RestOfCommand)
+            if CommandName == "RETR":
+                self.RETR(RestOfCommand)
+            if CommandName == "STOR":
+                self.STOR(RestOfCommand)
+            if CommandName == "QUIT":
+                self.QUIT()
+            if CommandName == "NOOP":
+                self.NOOP()
+            if CommandName == "LIST":
+                self.LIST(RestOfCommand)
+            if CommandName == "NLST":
+                self.NLST(RestOfCommand)
+        else: self.SendCode("530")
 
     def SendCode(self, Code):
 
         StringToSend = ""
 
+        if Code == "125":
+            StringToSend = "125 Data connection already open; transfer starting."
         if Code == "150":
             StringToSend = "150 File status okay; about to open data connection."
         if Code == "200":
@@ -108,12 +118,14 @@ class Server:
             StringToSend = "331 User name okay, need password."
         if Code == "332":
             StringToSend = "332 Need account for login."
+        if Code == "425":
+            StringToSend = "Can't open data connection."
         if Code == "530":
             StringToSend = "530 Not logged in."
 
         self.client.send(bytes(StringToSend + self.CRLF,"utf-8"))
 
-    def ReceiveData(self,ServerType, size):
+    def ReceiveData(self, ServerType, size):
         # Check the received has CRLF at the end if not - bad command
         if ServerType == "CONTROL":
             received = self.client.recv(size)
@@ -121,47 +133,47 @@ class Server:
             received = self.data.recv(size)
         return received.decode("utf-8")
 
-    def login(self):
-        # If incorrect three times = Server disconnect
-        # Make sure that logged in
-        # Client logs in using different password server must disconnect from client
-        self.USER()
-        self.PASS()
-        self.LoggedIn = True
+    def getFiles(self): 
+        FileNames = []
+        # List all files in a directory using scandir()
+        basepath = str(self.Username)
+        with os.scandir(basepath) as entries:
+            for entry in entries:
+                if (entry.is_file() and entry.endswith('.txt')):
+                    FileNames.append(str(entry))
+                    print(entry.name)
+
+        return FileNames
+
+
+    # def login(self):
+    #     # If incorrect three times = Server disconnect
+    #     # Make sure that logged in
+    #     # Client logs in using different password server must disconnect from client
+    #     self.USER()
+    #     self.PASS()
+    #     self.LoggedIn = True
             
-    def USER(self):
-        while True:
-            received = self.ReceiveData("CONTROL", 4096)
-            print(received)
-            print("Received data: " + received)
-            if (received[0:4] == 'USER' ):
-                    username = received[5:-2]
-                    print(username)
-                    if (username == "Alice" ):
-                        self.SendCode("331")
-                        print("Correct Username")
-                        break
-                    else: 
-                        self.SendCode("530")
-            else: 
-                self.SendCode("332")
+    def USER(self, username):
+        if (username == "Alice" ):
+            self.SendCode("331")
+            print("Correct Username")
+        else: 
+            self.SendCode("530")
 
-    def PASS(self):
-        while True:
-            received = self.ReceiveData("CONTROL",4096)
-            print("Received data: " + received)
-            if ( received[0:4] == 'PASS' ):
-                print(received[0:4])
-                password = received[5:-2]
-                print(password)
-                if (password == "Kirsten"):
-                    self.SendCode("230")
-                    break
-                else: 
-                    self.SendCode("530")
+    def PASS(self, password):
+        # received = self.ReceiveData("CONTROL",4096)
+        # print("Received data: " + received)
+        # if ( received[0:4] == 'PASS' ):
+        #     print(received[0:4])
+        #     password = received[5:-2]
+        #     print(password)
+        if (password == "Kirsten"):
+            self.loggedIn = True
+            self.SendCode("230")
+        else: 
+            self.SendCode("530")
 
-            else: 
-                self.SendCode("331")
 
     def PORT(self,RestOfCommand):
         print("PORT")
@@ -205,10 +217,38 @@ class Server:
         if result != 0:
             print("CONNECTION NOT MADE 2")
             self.close()
+            self.sendCode("150")
             return 0
 
         print("CONNECTION MADE")
+        self.sendCode("425")
         return 1
+
+    def NLST(self):
+        print("NLST")
+        DataError = self.MAKEDATACONN()
+        print("Getting filenames")
+        # Check if file is open
+        # Check the parameters are in the correct format and that there are parameters
+        if DataError == 0:
+            # Send some error code
+            print("Sad")     
+        else: 
+            files = self.getFiles()
+            SendFiles = ""
+            print("IN get files and send them")
+            for file in files:
+                if RepresentationType == "A":
+                    file = file + CRLF
+                elif RepresentationType == "E":
+                    file = file + ''
+                SendFiles = SendFiles + file
+
+            # Send the fileNames
+            self.data.send(SendFiles.encode("utf_8"))
+            self.SendCode("226")
+            self.data.close()
+        print("END OF NLST")
 
     def STOR(self, Pathname):
         print("IN STOR")
@@ -268,5 +308,5 @@ class Server:
         return True
 
 
-server = Server("192.168.8.100")
+server = Server("192.168.8.103")
 server.run()
